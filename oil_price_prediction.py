@@ -9,7 +9,6 @@ import nltk
 import google.generativeai as genai
 import os
 from io import BytesIO
-import config
 
 # Download the punkt tokenizer models
 nltk.download('punkt')
@@ -139,7 +138,7 @@ def extract_price_trends(text):
     return price_trends, ' '.join(relevant_sentences)
 
 # Function to generate content using the language model
-os.environ['GOOGLE_API_KEY'] = config.api_key
+os.environ['GOOGLE_API_KEY'] = "AIzaSyB_0W_3KBVKNI0Tygo2iBVMhfbiCwS9VfY"
 genai.configure(api_key=os.environ['GOOGLE_API_KEY'])
 model = genai.GenerativeModel('gemini-pro')
 
@@ -176,7 +175,7 @@ if st.button('Find PDF Links'):
         with st.spinner('Fetching and analyzing PDF links...'):
             pdf_links = find_pdf_links_with_pagination(url, max_pages)
         if pdf_links:
-            # st.success(f'Found {len(pdf_links)} PDF links across {max_pages} pages:')
+            st.success(f'Found {len(pdf_links)} PDF links across {max_pages} pages:')
             st.spinner("Pdf links fetched.... Extracting data")
             combined_text = ''
             all_pdf_text = ''
