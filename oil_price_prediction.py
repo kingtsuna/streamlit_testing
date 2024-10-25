@@ -6,6 +6,7 @@ import PyPDF2  # For PDF file reading
 import pandas as pd
 from newspaper import Article  # For website content extraction
 import nltk
+nltk.download('punkt')
 import google.generativeai as genai
 import os
 from io import BytesIO
