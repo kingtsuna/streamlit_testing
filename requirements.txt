@@ -1,5 +1,5 @@
 requests
-newspaper3k
+newspaper
 google-generativeai
 pandas
 beautifulsoup4
