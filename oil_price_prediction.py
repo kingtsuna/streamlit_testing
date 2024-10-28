@@ -10,10 +10,10 @@ nltk.download('punkt')
 import google.generativeai as genai
 import os
 from io import BytesIO
-nltk.download('punkt')
-nltk.download('wordnet')
-nltk.download('omw-1.4')
-nltk.download('punkt_tab')
+# nltk.download('punkt')
+# nltk.download('wordnet')
+# nltk.download('omw-1.4')
+# nltk.download('punkt_tab')
 
 # Ensure punkt data is downloaded
 
@@ -87,17 +87,27 @@ def find_pdf_links_with_pagination(url, max_pages=3):
         return []
 
 # Function to extract text from the first two pages of a PDF
+# def extract_text_from_pdf(pdf_file):
+#     try:
+#         pdf_reader = PyPDF2.PdfReader(pdf_file)
+#         text = ''
+#         for page_num in range(min(2, len(pdf_reader.pages))):
+#             page = pdf_reader.pages[page_num]
+#             text += page.extract_text()
+#         return text
+#     except Exception as e:
+#         st.error(f"An error occurred while processing the PDF file: {e}")
+#         return None
+
 def extract_text_from_pdf(pdf_file):
     try:
         pdf_reader = PyPDF2.PdfReader(pdf_file)
-        text = ''
-        for page_num in range(min(2, len(pdf_reader.pages))):
-            page = pdf_reader.pages[page_num]
-            text += page.extract_text()
+        text = ''.join(page.extract_text() for page in pdf_reader.pages[:2])
         return text
     except Exception as e:
         st.error(f"An error occurred while processing the PDF file: {e}")
         return None
+
 
 # Function to fetch and download PDF from URL and extract text
 def download_and_extract_pdf_from_url(url):
@@ -122,7 +132,7 @@ def extract_text_from_website(url):
         st.error(f"An error occurred while fetching content from {url}: {e}")
         return None
 
-# Function to filter and extract price information and trends
+# # Function to filter and extract price information and trends
 # def extract_price_trends(text):
 #     PRICE_KEYWORDS = ['price', 'increase', 'decrease', 'rate', 'cost', 'change', 'up', 'down']
 #     PRODUCTS = ['Palm Oil', 'Rapeseed Oil', 'PFAD', 'Sunflower Oil']
@@ -145,6 +155,11 @@ def extract_text_from_website(url):
 #                         relevant_sentences.append(f'{product}: {sentence}')
 #     return price_trends, ' '.join(relevant_sentences)
 
+
+import re
+import nltk
+from datetime import datetime
+
 def extract_price_trends(text):
     # Define relevant keywords and regex patterns for broader data extraction
     PRICE_KEYWORDS = ['price', 'increase', 'decrease', 'rate', 'cost', 'change', 'up', 'down', 'rise', 'drop', 'fall']
@@ -154,8 +169,9 @@ def extract_price_trends(text):
 
     price_trends = {product: [] for product in PRODUCTS}  # Store multiple sentences for each product
 
-    # Regex pattern for numbers related to pricing and changes
+    # Regex pattern for numbers and dates
     price_regex = r'(\d+[\.,]?\d*)'
+    date_regex = r'(\b(January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{4}\b)'
 
     # Tokenize the text into sentences
     sentences = nltk.sent_tokenize(text)
@@ -173,12 +189,20 @@ def extract_price_trends(text):
                     elif "decrease" in sentence.lower() or "down" in sentence.lower() or "fall" in sentence.lower() or "drop" in sentence.lower():
                         trend = "down"
                     
-                    # Extract price and trend information if available
+                    # Extract price, trend, and date information if available
                     price_match = re.search(price_regex, sentence)
-                    if trend and price_match:
-                        trend_info = f'{product} price is going {trend}: {price_match.group(0)}'
+                    date_match = re.search(date_regex, sentence)
+                    
+                    # Format date if found
+                    if date_match:
+                        date_str = date_match.group(1)
                     else:
-                        trend_info = f'{product} - No clear price trend, but relevant: {sentence}'
+                        date_str = "No specific date"
+
+                    if trend and price_match:
+                        trend_info = f'{product} price is going {trend}: {price_match.group(0)} on {date_str}'
+                    else:
+                        trend_info = f'{product} - No clear price trend, but relevant: {sentence} (Date: {date_str})'
 
                     # Add the sentence and trend info to the product’s list of trends
                     price_trends[product].append(trend_info)
@@ -192,6 +216,7 @@ def extract_price_trends(text):
     all_relevant_sentences = ' '.join([' '.join(trends) for trends in price_trends.values()])
 
     return formatted_trends, all_relevant_sentences
+
 
 
 # Function to generate content using the language model
@@ -243,11 +268,11 @@ if st.button('Find PDF Links'):
             combined_text += all_pdf_text
             price_trends, relevant_info = extract_price_trends(combined_text)
             selected_question = """
-            Summarize the document, focusing on the price fluctuations of palm oil and soybean oil, with particular emphasis on the significant changes that have occurred in the last two months.Presnt if the prices have increased or decreased. Present the key factors driving these recent price movements in bullet points, including global demand, supply, and geopolitical events.
-            If no data is present, redo the process atleast 3 times until data can be extracted"""
-            print ('\n\n\n\n')
-            print (relevant_info)
-            query = f'{selected_question} {relevant_info}'
+            Summarize the document, focusing on the price fluctuations of palm oil and soybean oil, with particular emphasis on the significant changes that have occurred in the last two months.Presnt if the prices have increased or decreased. Present the key factors driving these recent price movements in bullet points, including global demand, supply, and geopolitical events. Return the data in Bullet form"""
+            # print ('\n\n\n\n')
+            # print (combined_text)
+            # print('-----------------------------------------')
+            query = f'{selected_question} {combined_text}'
             response_text = llm_function(query)
             if response_text:
                 st.write(response_text)
