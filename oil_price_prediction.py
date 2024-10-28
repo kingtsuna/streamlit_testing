@@ -5,11 +5,22 @@ import re
 import PyPDF2  # For PDF file reading
 import pandas as pd
 from newspaper import Article  # For website content extraction
-import nltk
-nltk.download('punkt')
+# import nltk
+# nltk.download('punkt')
 import google.generativeai as genai
 import os
 from io import BytesIO
+
+
+import nltk
+import streamlit as st
+
+# Ensure punkt data is downloaded
+try:
+    nltk.data.find('tokenizers/punkt')
+except LookupError:
+    nltk.download('punkt')
+
 
 # Download the punkt tokenizer models
 nltk.download('punkt')
