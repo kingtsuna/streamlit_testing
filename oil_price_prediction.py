@@ -269,7 +269,7 @@ if st.button('Find PDF Links'):
             price_trends, relevant_info = extract_price_trends(combined_text)
             selected_question = """
             Summarize the document, focusing on the price fluctuations of palm oil and soybean oil, with particular emphasis on the significant changes that have occurred in the last two months.Presnt if the prices have increased or decreased. Present the key factors driving these recent price movements in bullet points, including global demand, supply, and geopolitical events. Return the data in Bullet form"""
-            # print ('\n\n\n\n')
+            print ('\n\n\n\n')
             print (combined_text)
             print('-----------------------------------------')
             query = f'{selected_question} {combined_text}'
