@@ -123,27 +123,76 @@ def extract_text_from_website(url):
         return None
 
 # Function to filter and extract price information and trends
+# def extract_price_trends(text):
+#     PRICE_KEYWORDS = ['price', 'increase', 'decrease', 'rate', 'cost', 'change', 'up', 'down']
+#     PRODUCTS = ['Palm Oil', 'Rapeseed Oil', 'PFAD', 'Sunflower Oil']
+#     price_regex = r'(\d+[\.\,]?\d*)'
+#     sentences = nltk.sent_tokenize(text)
+#     relevant_sentences = []
+#     price_trends = {product: '' for product in PRODUCTS}
+#     for sentence in sentences:
+#         for product in PRODUCTS:
+#             if product.lower() in sentence.lower():
+#                 if any(keyword in sentence.lower() for keyword in PRICE_KEYWORDS):
+#                     price_match = re.search(price_regex, sentence)
+#                     trend = None
+#                     if "increase" in sentence.lower() or "up" in sentence.lower():
+#                         trend = "up"
+#                     elif "decrease" in sentence.lower() or "down" in sentence.lower():
+#                         trend = "down"
+#                     if trend and price_match:
+#                         price_trends[product] = f'{product} price is going {trend}: {price_match.group(0)}'
+#                         relevant_sentences.append(f'{product}: {sentence}')
+#     return price_trends, ' '.join(relevant_sentences)
+
 def extract_price_trends(text):
-    PRICE_KEYWORDS = ['price', 'increase', 'decrease', 'rate', 'cost', 'change', 'up', 'down']
+    # Define relevant keywords and regex patterns for broader data extraction
+    PRICE_KEYWORDS = ['price', 'increase', 'decrease', 'rate', 'cost', 'change', 'up', 'down', 'rise', 'drop', 'fall']
+    SUPPLY_KEYWORDS = ['supply', 'demand', 'shortage', 'surplus', 'production', 'export', 'import', 'availability']
+    FACTORS_KEYWORDS = ['geopolitical', 'war', 'conflict', 'sanctions', 'climate', 'weather', 'tariffs', 'embargo']
     PRODUCTS = ['Palm Oil', 'Rapeseed Oil', 'PFAD', 'Sunflower Oil']
-    price_regex = r'(\d+[\.\,]?\d*)'
+
+    price_trends = {product: [] for product in PRODUCTS}  # Store multiple sentences for each product
+
+    # Regex pattern for numbers related to pricing and changes
+    price_regex = r'(\d+[\.,]?\d*)'
+
+    # Tokenize the text into sentences
     sentences = nltk.sent_tokenize(text)
-    relevant_sentences = []
-    price_trends = {product: '' for product in PRODUCTS}
+    
+    # Loop through sentences and extract relevant information
     for sentence in sentences:
         for product in PRODUCTS:
             if product.lower() in sentence.lower():
-                if any(keyword in sentence.lower() for keyword in PRICE_KEYWORDS):
-                    price_match = re.search(price_regex, sentence)
+                # Check if sentence has keywords related to price, supply, or factors
+                if any(keyword in sentence.lower() for keyword in PRICE_KEYWORDS + SUPPLY_KEYWORDS + FACTORS_KEYWORDS):
+                    # Identify price movement (up, down) if mentioned
                     trend = None
-                    if "increase" in sentence.lower() or "up" in sentence.lower():
+                    if "increase" in sentence.lower() or "up" in sentence.lower() or "rise" in sentence.lower():
                         trend = "up"
-                    elif "decrease" in sentence.lower() or "down" in sentence.lower():
+                    elif "decrease" in sentence.lower() or "down" in sentence.lower() or "fall" in sentence.lower() or "drop" in sentence.lower():
                         trend = "down"
+                    
+                    # Extract price and trend information if available
+                    price_match = re.search(price_regex, sentence)
                     if trend and price_match:
-                        price_trends[product] = f'{product} price is going {trend}: {price_match.group(0)}'
-                        relevant_sentences.append(f'{product}: {sentence}')
-    return price_trends, ' '.join(relevant_sentences)
+                        trend_info = f'{product} price is going {trend}: {price_match.group(0)}'
+                    else:
+                        trend_info = f'{product} - No clear price trend, but relevant: {sentence}'
+
+                    # Add the sentence and trend info to the product’s list of trends
+                    price_trends[product].append(trend_info)
+
+    # Format results for easier display
+    formatted_trends = {}
+    for product, trends in price_trends.items():
+        formatted_trends[product] = "\n".join(trends) if trends else "No significant data found for this product."
+
+    # Combine all sentences into one string for additional analysis or summarization
+    all_relevant_sentences = ' '.join([' '.join(trends) for trends in price_trends.values()])
+
+    return formatted_trends, all_relevant_sentences
+
 
 # Function to generate content using the language model
 os.environ['GOOGLE_API_KEY'] = "AIzaSyB_0W_3KBVKNI0Tygo2iBVMhfbiCwS9VfY"
